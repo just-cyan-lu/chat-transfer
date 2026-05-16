@@ -465,11 +465,13 @@ button {
 }
 
 .message {
+  position: relative;
   display: grid;
   grid-template-columns: 30px minmax(0, 1fr);
-  gap: 6px 10px;
+  gap: 10px;
   width: 100%;
-  margin: 0 0 14px;
+  margin: 0 0 18px;
+  padding-bottom: 10px;
 }
 
 .message.user {
@@ -535,26 +537,24 @@ button {
 }
 
 .message-actions {
+  position: absolute;
+  bottom: -2px;
   display: flex;
-  grid-column: 2;
-  height: 0;
+  left: 40px;
   justify-content: flex-start;
-  overflow: hidden;
   opacity: 0;
   pointer-events: none;
-  transition:
-    height 120ms ease,
-    opacity 120ms ease;
+  transition: opacity 120ms ease;
 }
 
 .message.user .message-actions {
-  grid-column: 1;
+  right: 40px;
+  left: auto;
   justify-content: flex-end;
 }
 
 .message:hover .message-actions,
 .message:focus-within .message-actions {
-  height: 26px;
   opacity: 1;
   pointer-events: auto;
 }
