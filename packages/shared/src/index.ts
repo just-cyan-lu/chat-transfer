@@ -22,7 +22,7 @@ export type Conversation = {
   updatedAt: string;
 };
 
-export type MessageRole = "system" | "user" | "assistant" | "tool";
+export type MessageRole = "system" | "user" | "assistant";
 
 export type Message = {
   id: string;
@@ -31,28 +31,4 @@ export type Message = {
   content: string;
   status: "complete" | "streaming" | "error";
   createdAt: string;
-};
-
-export type Attachment = {
-  id: string;
-  conversationId: string | null;
-  messageId: string | null;
-  kind: "image" | "screenshot" | "artifact" | "log" | "file";
-  filename: string;
-  mimeType: string;
-  sizeBytes: number;
-  storagePath: string;
-  createdAt: string;
-};
-
-export type ToolRun = {
-  id: string;
-  conversationId: string;
-  messageId: string | null;
-  name: string;
-  status: "pending" | "running" | "complete" | "error";
-  inputJson: string;
-  outputText: string;
-  createdAt: string;
-  updatedAt: string;
 };

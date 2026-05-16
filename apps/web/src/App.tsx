@@ -294,7 +294,7 @@ export default function App() {
                 <ChevronsUp size={28} />
               </div>
               <h3>开始一段本地会话</h3>
-              <p>消息会写入 SQLite；图片、截图和附件会进入文件目录。</p>
+              <p>配置模型后直接聊天；会话和消息会保存到本地 SQLite。</p>
             </div>
           ) : (
             messages.map((message) => (

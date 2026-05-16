@@ -11,17 +11,10 @@ const dataRoot = path.resolve(process.env.CHAT_TRANSFER_DATA_DIR ?? path.join(pr
 
 export const storagePaths = {
   dataRoot,
-  database: path.join(dataRoot, "chat-transfer.sqlite"),
-  attachments: path.join(dataRoot, "files", "attachments"),
-  screenshots: path.join(dataRoot, "files", "screenshots"),
-  artifacts: path.join(dataRoot, "files", "artifacts"),
-  logs: path.join(dataRoot, "files", "logs")
+  database: path.join(dataRoot, "chat-transfer.sqlite")
 };
 
-for (const folder of Object.values(storagePaths)) {
-  if (folder.endsWith(".sqlite")) continue;
-  fs.mkdirSync(folder, { recursive: true });
-}
+fs.mkdirSync(dataRoot, { recursive: true });
 
 export const db = new Database(storagePaths.database);
 db.pragma("journal_mode = WAL");
@@ -62,30 +55,6 @@ export function migrate() {
 
     CREATE INDEX IF NOT EXISTS idx_messages_conversation_created
       ON messages(conversation_id, created_at);
-
-    CREATE TABLE IF NOT EXISTS attachments (
-      id TEXT PRIMARY KEY,
-      conversation_id TEXT REFERENCES conversations(id) ON DELETE SET NULL,
-      message_id TEXT REFERENCES messages(id) ON DELETE SET NULL,
-      kind TEXT NOT NULL,
-      filename TEXT NOT NULL,
-      mime_type TEXT NOT NULL,
-      size_bytes INTEGER NOT NULL,
-      storage_path TEXT NOT NULL,
-      created_at TEXT NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS tool_runs (
-      id TEXT PRIMARY KEY,
-      conversation_id TEXT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
-      message_id TEXT REFERENCES messages(id) ON DELETE SET NULL,
-      name TEXT NOT NULL,
-      status TEXT NOT NULL,
-      input_json TEXT NOT NULL,
-      output_text TEXT NOT NULL,
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL
-    );
   `);
 }
 
