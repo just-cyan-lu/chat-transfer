@@ -459,16 +459,16 @@ export default function App() {
                       {message.status === "error" && <span>出错</span>}
                     </div>
                     <p>{message.content}</p>
-                  </div>
-                  <div className="message-actions">
-                    <button
-                      aria-label="删除消息"
-                      className="mini-icon-button danger"
-                      type="button"
-                      onClick={() => void deleteMessageItem(message.id)}
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                    <div className="message-actions">
+                      <button
+                        aria-label="删除消息"
+                        className="mini-icon-button danger"
+                        type="button"
+                        onClick={() => void deleteMessageItem(message.id)}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </div>
                 </article>
               ))

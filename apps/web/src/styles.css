@@ -465,13 +465,11 @@ button {
 }
 
 .message {
-  position: relative;
   display: grid;
   grid-template-columns: 30px minmax(0, 1fr);
   gap: 10px;
   width: 100%;
   margin: 0 0 18px;
-  padding-bottom: 10px;
 }
 
 .message.user {
@@ -496,8 +494,10 @@ button {
 }
 
 .message-body {
+  position: relative;
   max-width: 820px;
-  padding: 12px 13px;
+  min-width: 0;
+  padding: 12px 42px 34px 13px;
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -538,25 +538,33 @@ button {
 
 .message-actions {
   position: absolute;
-  bottom: -2px;
+  right: 10px;
+  bottom: 8px;
   display: flex;
-  left: 40px;
-  justify-content: flex-start;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 120ms ease;
+  transform: translateY(2px);
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
 }
 
 .message.user .message-actions {
-  right: 40px;
-  left: auto;
-  justify-content: flex-end;
+  right: 10px;
 }
 
 .message:hover .message-actions,
 .message:focus-within .message-actions {
   opacity: 1;
   pointer-events: auto;
+  transform: translateY(0);
+}
+
+.message-actions .mini-icon-button {
+  width: 24px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 8px 20px rgba(31, 42, 55, 0.1);
 }
 
 .composer-wrap {
