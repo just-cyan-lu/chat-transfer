@@ -98,7 +98,6 @@ button {
 
 .brand h1,
 .brand p,
-.chat-header h2,
 .settings-header h2,
 .empty-state h3,
 .empty-state p,
@@ -312,19 +311,14 @@ button {
   display: grid;
   height: 100vh;
   min-width: 0;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr) auto;
   overflow: hidden;
 }
 
-.chat-header,
 .settings-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
-
-.chat-header {
-  padding: 22px 30px 12px;
 }
 
 .eyebrow {
@@ -336,7 +330,6 @@ button {
   text-transform: uppercase;
 }
 
-.chat-header h2,
 .settings-header h2 {
   overflow: hidden;
   color: var(--text);
@@ -347,31 +340,26 @@ button {
   white-space: nowrap;
 }
 
-.model-pill {
-  display: inline-flex;
-  min-width: 0;
-  max-width: 240px;
-  align-items: center;
-  gap: 7px;
-  padding: 7px 10px;
-  color: var(--primary);
-  background: var(--panel);
-  border: 1px solid rgba(0, 144, 255, 0.16);
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.model-pill span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .messages {
   min-height: 0;
   overflow: auto;
-  padding: 8px 30px 22px;
+  padding: 30px 30px 22px;
+}
+
+.message-stack {
+  width: 100%;
+  max-width: 940px;
+  margin: 0 auto;
+}
+
+.composer-wrap {
+  width: calc(100% - 60px);
+  max-width: 940px;
+  margin: 0 auto;
+}
+
+.message-stack {
+  min-height: 100%;
 }
 
 .empty-state {
@@ -409,14 +397,12 @@ button {
   display: grid;
   grid-template-columns: 30px minmax(0, 1fr);
   gap: 10px;
-  max-width: 820px;
-  margin: 0 auto 14px;
+  width: 100%;
+  margin: 0 0 14px;
 }
 
 .message.user {
   grid-template-columns: minmax(0, 1fr) 30px;
-  max-width: 720px;
-  margin-left: auto;
 }
 
 .message.user .avatar {
@@ -437,6 +423,7 @@ button {
 }
 
 .message-body {
+  max-width: 820px;
   padding: 12px 13px;
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid var(--line);
@@ -449,6 +436,8 @@ button {
 }
 
 .message.user .message-body {
+  max-width: 720px;
+  justify-self: end;
   background: #fff4ee;
   border-color: rgba(255, 80, 0, 0.18);
 }
@@ -474,14 +463,15 @@ button {
   white-space: pre-wrap;
 }
 
+.composer-wrap {
+  padding-bottom: 18px;
+}
+
 .composer {
   display: grid;
-  width: calc(100% - 60px);
-  max-width: 940px;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
-  margin: 0 auto 22px;
-  padding: 12px;
+  padding: 14px;
   background: rgba(255, 255, 255, 0.94);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -489,8 +479,8 @@ button {
 }
 
 .composer textarea {
-  min-height: 50px;
-  max-height: 150px;
+  min-height: 88px;
+  max-height: 220px;
   resize: vertical;
   color: var(--text);
   background: transparent;
@@ -502,9 +492,35 @@ button {
 
 .send-button {
   align-self: end;
+  min-height: 40px;
   padding: 0 14px;
   color: #ffffff;
   background: var(--primary);
+}
+
+.composer-tips {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  padding-top: 8px;
+  color: #98a2b3;
+  font-size: 11px;
+}
+
+.composer-tips kbd {
+  display: inline-flex;
+  min-width: 28px;
+  min-height: 18px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  color: #667085;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  box-shadow: 0 1px 0 rgba(31, 42, 55, 0.04);
+  font-family: inherit;
+  font-size: 11px;
 }
 
 .send-button:disabled,
@@ -656,26 +672,17 @@ button {
     max-height: 180px;
   }
 
-  .chat-header,
   .messages {
     padding-right: 18px;
     padding-left: 18px;
   }
 
-  .composer {
+  .composer-wrap {
     width: calc(100% - 36px);
-    margin-right: 18px;
-    margin-left: 18px;
   }
 }
 
 @media (max-width: 560px) {
-  .chat-header {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 10px;
-  }
-
   .composer {
     grid-template-columns: 1fr;
   }

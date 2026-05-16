@@ -65,11 +65,6 @@ export default function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [statusText, setStatusText] = useState("本地服务连接中");
 
-  const activeConversation = useMemo(
-    () => conversations.find((conversation) => conversation.id === activeConversationId),
-    [activeConversationId, conversations]
-  );
-
   const selectedProvider = useMemo(
     () => providers.find((provider) => provider.id === selectedProviderId),
     [providers, selectedProviderId]
@@ -302,61 +297,63 @@ export default function App() {
       </aside>
 
       <section className="chat-panel">
-        <header className="chat-header">
-          <div>
-            <span className="eyebrow">Chat</span>
-            <h2>{activeConversation?.title ?? "新的对话"}</h2>
-          </div>
-          <button className="model-pill" type="button" onClick={() => setIsSettingsOpen(true)}>
-            <Bot size={15} />
-            <span>{selectedProvider?.name ?? "未配置模型"}</span>
-          </button>
-        </header>
-
         <div className="messages">
-          {messages.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">
-                <Sparkles size={24} />
-              </div>
-              <h3>开始一段对话</h3>
-              <p>配置模型后直接聊天；会话和消息会保存到本地 SQLite。</p>
-            </div>
-          ) : (
-            messages.map((message) => (
-              <article className={`message ${message.role}`} key={message.id}>
-                <div className="avatar">{message.role === "user" ? <UserRound size={15} /> : <Bot size={15} />}</div>
-                <div className="message-body">
-                  <div className="message-meta">
-                    <strong>{message.role === "user" ? "你" : "助手"}</strong>
-                    {message.status === "streaming" && <span>生成中</span>}
-                    {message.status === "error" && <span>出错</span>}
-                  </div>
-                  <p>{message.content}</p>
+          <div className="message-stack">
+            {messages.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">
+                  <Sparkles size={24} />
                 </div>
-              </article>
-            ))
-          )}
+                <h3>开始一段对话</h3>
+                <p>配置模型后直接聊天；会话和消息会保存到本地 SQLite。</p>
+              </div>
+            ) : (
+              messages.map((message) => (
+                <article className={`message ${message.role}`} key={message.id}>
+                  <div className="avatar">{message.role === "user" ? <UserRound size={15} /> : <Bot size={15} />}</div>
+                  <div className="message-body">
+                    <div className="message-meta">
+                      <strong>{message.role === "user" ? "你" : "助手"}</strong>
+                      {message.status === "streaming" && <span>生成中</span>}
+                      {message.status === "error" && <span>出错</span>}
+                    </div>
+                    <p>{message.content}</p>
+                  </div>
+                </article>
+              ))
+            )}
+          </div>
         </div>
 
-        <form className="composer" onSubmit={(event) => void sendMessage(event)}>
-          <textarea
-            aria-label="输入消息"
-            value={draft}
-            placeholder="输入消息..."
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                event.currentTarget.form?.requestSubmit();
-              }
-            }}
-          />
-          <button className="send-button" type="submit" disabled={isSending || !draft.trim()}>
-            <Send size={16} />
-            <span>发送</span>
-          </button>
-        </form>
+        <div className="composer-wrap">
+          <form className="composer" onSubmit={(event) => void sendMessage(event)}>
+            <textarea
+              aria-label="输入消息"
+              value={draft}
+              placeholder="输入消息..."
+              onChange={(event) => setDraft(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.nativeEvent.isComposing) return;
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  event.currentTarget.form?.requestSubmit();
+                }
+              }}
+            />
+            <button className="send-button" type="submit" disabled={isSending || !draft.trim()}>
+              <Send size={16} />
+              <span>发送</span>
+            </button>
+          </form>
+          <div className="composer-tips">
+            <span>
+              <kbd>Enter</kbd> 发送
+            </span>
+            <span>
+              <kbd>Shift</kbd> + <kbd>Enter</kbd> 换行
+            </span>
+          </div>
+        </div>
       </section>
 
       {isSettingsOpen && (
