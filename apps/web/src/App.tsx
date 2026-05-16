@@ -5,6 +5,8 @@ import {
   KeyRound,
   MessageSquare,
   MessageSquarePlus,
+  PanelLeftClose,
+  PanelLeftOpen,
   Send,
   Settings2,
   Sparkles,
@@ -60,6 +62,7 @@ export default function App() {
   const [isSending, setIsSending] = useState(false);
   const [isSavingProvider, setIsSavingProvider] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [statusText, setStatusText] = useState("本地服务连接中");
 
   const activeConversation = useMemo(
@@ -244,20 +247,28 @@ export default function App() {
   }
 
   return (
-    <main className="shell">
+    <main className={isSidebarCollapsed ? "shell sidebar-collapsed" : "shell"}>
       <aside className="sidebar">
         <header className="brand">
           <div className="brand-mark">
-            <Sparkles size={18} />
+            <Sparkles size={16} />
           </div>
           <div>
             <h1>Chat Transfer</h1>
             <p>{statusText}</p>
           </div>
+          <button
+            aria-label={isSidebarCollapsed ? "展开侧边栏" : "收起侧边栏"}
+            className="collapse-button"
+            type="button"
+            onClick={() => setIsSidebarCollapsed((current) => !current)}
+          >
+            {isSidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+          </button>
         </header>
 
         <button className="new-chat" type="button" onClick={createNewConversation}>
-          <MessageSquarePlus size={18} />
+          <MessageSquarePlus size={16} />
           <span>新建对话</span>
         </button>
 
@@ -268,9 +279,10 @@ export default function App() {
               className={conversation.id === activeConversationId ? "conversation active" : "conversation"}
               key={conversation.id}
               type="button"
+              title={conversation.title}
               onClick={() => void openConversation(conversation.id)}
             >
-              <MessageSquare size={17} />
+              <MessageSquare size={16} />
               <span>{conversation.title}</span>
               <small>{new Date(conversation.updatedAt).toLocaleDateString()}</small>
             </button>
@@ -279,11 +291,11 @@ export default function App() {
 
         <footer className="sidebar-footer">
           <button className="settings-button" type="button" onClick={() => setIsSettingsOpen(true)}>
-            <Settings2 size={18} />
+            <Settings2 size={16} />
             <span>模型设置</span>
           </button>
           <div className="selected-model">
-            <Bot size={16} />
+            <Bot size={15} />
             <span>{selectedProvider?.model ?? "Demo 模式"}</span>
           </div>
         </footer>
@@ -296,7 +308,7 @@ export default function App() {
             <h2>{activeConversation?.title ?? "新的对话"}</h2>
           </div>
           <button className="model-pill" type="button" onClick={() => setIsSettingsOpen(true)}>
-            <Bot size={16} />
+            <Bot size={15} />
             <span>{selectedProvider?.name ?? "未配置模型"}</span>
           </button>
         </header>
@@ -305,7 +317,7 @@ export default function App() {
           {messages.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon">
-                <Sparkles size={28} />
+                <Sparkles size={24} />
               </div>
               <h3>开始一段对话</h3>
               <p>配置模型后直接聊天；会话和消息会保存到本地 SQLite。</p>
@@ -313,7 +325,7 @@ export default function App() {
           ) : (
             messages.map((message) => (
               <article className={`message ${message.role}`} key={message.id}>
-                <div className="avatar">{message.role === "user" ? <UserRound size={17} /> : <Bot size={17} />}</div>
+                <div className="avatar">{message.role === "user" ? <UserRound size={15} /> : <Bot size={15} />}</div>
                 <div className="message-body">
                   <div className="message-meta">
                     <strong>{message.role === "user" ? "你" : "助手"}</strong>
@@ -341,7 +353,7 @@ export default function App() {
             }}
           />
           <button className="send-button" type="submit" disabled={isSending || !draft.trim()}>
-            <Send size={18} />
+            <Send size={16} />
             <span>发送</span>
           </button>
         </form>
@@ -361,7 +373,7 @@ export default function App() {
                 <h2>模型设置</h2>
               </div>
               <button className="icon-button" type="button" aria-label="关闭模型设置" onClick={() => setIsSettingsOpen(false)}>
-                <X size={18} />
+                <X size={16} />
               </button>
             </header>
 
@@ -411,7 +423,7 @@ export default function App() {
               </label>
 
               <button className="save-provider" type="submit" disabled={isSavingProvider}>
-                {isSavingProvider ? <Settings2 size={17} /> : <KeyRound size={17} />}
+                {isSavingProvider ? <Settings2 size={16} /> : <KeyRound size={16} />}
                 <span>{isSavingProvider ? "保存中" : "保存配置"}</span>
               </button>
             </form>
