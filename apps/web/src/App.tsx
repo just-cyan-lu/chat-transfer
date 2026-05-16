@@ -2,14 +2,14 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   Bot,
   Check,
-  ChevronsUp,
   KeyRound,
+  MessageSquare,
   MessageSquarePlus,
-  PanelRight,
   Send,
   Settings2,
   Sparkles,
-  UserRound
+  UserRound,
+  X
 } from "lucide-react";
 import type { Conversation, Message, ProviderKind, ProviderSummary } from "@chat-transfer/shared";
 
@@ -59,6 +59,7 @@ export default function App() {
   const [draft, setDraft] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isSavingProvider, setIsSavingProvider] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [statusText, setStatusText] = useState("本地服务连接中");
 
   const activeConversation = useMemo(
@@ -245,7 +246,7 @@ export default function App() {
   return (
     <main className="shell">
       <aside className="sidebar">
-        <div className="brand">
+        <header className="brand">
           <div className="brand-mark">
             <Sparkles size={18} />
           </div>
@@ -253,13 +254,14 @@ export default function App() {
             <h1>Chat Transfer</h1>
             <p>{statusText}</p>
           </div>
-        </div>
+        </header>
 
         <button className="new-chat" type="button" onClick={createNewConversation}>
           <MessageSquarePlus size={18} />
-          <span>新会话</span>
+          <span>新建对话</span>
         </button>
 
+        <div className="sidebar-label">对话历史</div>
         <nav className="conversation-list" aria-label="会话列表">
           {conversations.map((conversation) => (
             <button
@@ -268,32 +270,44 @@ export default function App() {
               type="button"
               onClick={() => void openConversation(conversation.id)}
             >
+              <MessageSquare size={17} />
               <span>{conversation.title}</span>
               <small>{new Date(conversation.updatedAt).toLocaleDateString()}</small>
             </button>
           ))}
         </nav>
+
+        <footer className="sidebar-footer">
+          <button className="settings-button" type="button" onClick={() => setIsSettingsOpen(true)}>
+            <Settings2 size={18} />
+            <span>模型设置</span>
+          </button>
+          <div className="selected-model">
+            <Bot size={16} />
+            <span>{selectedProvider?.model ?? "Demo 模式"}</span>
+          </div>
+        </footer>
       </aside>
 
       <section className="chat-panel">
         <header className="chat-header">
           <div>
-            <span className="eyebrow">Workspace</span>
+            <span className="eyebrow">Chat</span>
             <h2>{activeConversation?.title ?? "新的对话"}</h2>
           </div>
-          <div className="model-pill">
+          <button className="model-pill" type="button" onClick={() => setIsSettingsOpen(true)}>
             <Bot size={16} />
-            <span>{selectedProvider?.model ?? "Demo"}</span>
-          </div>
+            <span>{selectedProvider?.name ?? "未配置模型"}</span>
+          </button>
         </header>
 
         <div className="messages">
           {messages.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon">
-                <ChevronsUp size={28} />
+                <Sparkles size={28} />
               </div>
-              <h3>开始一段本地会话</h3>
+              <h3>开始一段对话</h3>
               <p>配置模型后直接聊天；会话和消息会保存到本地 SQLite。</p>
             </div>
           ) : (
@@ -317,7 +331,7 @@ export default function App() {
           <textarea
             aria-label="输入消息"
             value={draft}
-            placeholder="输入消息，按发送开始..."
+            placeholder="输入消息..."
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.shiftKey) {
@@ -328,81 +342,102 @@ export default function App() {
           />
           <button className="send-button" type="submit" disabled={isSending || !draft.trim()}>
             <Send size={18} />
+            <span>发送</span>
           </button>
         </form>
       </section>
 
-      <aside className="settings-panel">
-        <header className="settings-header">
-          <div>
-            <span className="eyebrow">Provider</span>
-            <h2>模型配置</h2>
-          </div>
-          <PanelRight size={20} />
-        </header>
-
-        <form className="provider-form" onSubmit={(event) => void saveProvider(event)}>
-          <label>
-            <span>名称</span>
-            <input value={providerForm.name} onChange={(event) => setProviderForm({ ...providerForm, name: event.target.value })} />
-          </label>
-
-          <label>
-            <span>接口类型</span>
-            <select
-              value={providerForm.kind}
-              onChange={(event) => setProviderForm({ ...providerForm, kind: event.target.value as ProviderKind })}
-            >
-              <option value="openai-compatible">OpenAI Compatible</option>
-              <option value="anthropic-compatible">Anthropic Compatible</option>
-            </select>
-          </label>
-
-          <label>
-            <span>Base URL</span>
-            <input
-              value={providerForm.baseUrl}
-              onChange={(event) => setProviderForm({ ...providerForm, baseUrl: event.target.value })}
-            />
-          </label>
-
-          <label>
-            <span>API Key</span>
-            <input
-              type="password"
-              value={providerForm.apiKey}
-              onChange={(event) => setProviderForm({ ...providerForm, apiKey: event.target.value })}
-            />
-          </label>
-
-          <label>
-            <span>Model</span>
-            <input value={providerForm.model} onChange={(event) => setProviderForm({ ...providerForm, model: event.target.value })} />
-          </label>
-
-          <button className="save-provider" type="submit" disabled={isSavingProvider}>
-            {isSavingProvider ? <Settings2 size={17} /> : <KeyRound size={17} />}
-            <span>{isSavingProvider ? "保存中" : "保存配置"}</span>
-          </button>
-        </form>
-
-        <div className="provider-list">
-          {providers.map((provider) => (
-            <button
-              className={provider.id === selectedProviderId ? "provider-item active" : "provider-item"}
-              key={provider.id}
-              type="button"
-              onClick={() => setSelectedProviderId(provider.id)}
-            >
+      {isSettingsOpen && (
+        <div className="settings-backdrop" role="presentation" onClick={() => setIsSettingsOpen(false)}>
+          <section
+            aria-label="模型配置"
+            className="settings-dialog"
+            role="dialog"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="settings-header">
               <div>
-                <strong>{provider.name}</strong>
-                <span>{provider.model}</span>
+                <span className="eyebrow">Provider</span>
+                <h2>模型设置</h2>
               </div>
-              {provider.id === selectedProviderId && <Check size={18} />}
-            </button>
-          ))}
+              <button className="icon-button" type="button" aria-label="关闭模型设置" onClick={() => setIsSettingsOpen(false)}>
+                <X size={18} />
+              </button>
+            </header>
+
+            <form className="provider-form" onSubmit={(event) => void saveProvider(event)}>
+              <label>
+                <span>名称</span>
+                <input
+                  value={providerForm.name}
+                  onChange={(event) => setProviderForm({ ...providerForm, name: event.target.value })}
+                />
+              </label>
+
+              <label>
+                <span>接口类型</span>
+                <select
+                  value={providerForm.kind}
+                  onChange={(event) => setProviderForm({ ...providerForm, kind: event.target.value as ProviderKind })}
+                >
+                  <option value="openai-compatible">OpenAI Compatible</option>
+                  <option value="anthropic-compatible">Anthropic Compatible</option>
+                </select>
+              </label>
+
+              <label>
+                <span>Base URL</span>
+                <input
+                  value={providerForm.baseUrl}
+                  onChange={(event) => setProviderForm({ ...providerForm, baseUrl: event.target.value })}
+                />
+              </label>
+
+              <label>
+                <span>API Key</span>
+                <input
+                  type="password"
+                  value={providerForm.apiKey}
+                  onChange={(event) => setProviderForm({ ...providerForm, apiKey: event.target.value })}
+                />
+              </label>
+
+              <label>
+                <span>Model</span>
+                <input
+                  value={providerForm.model}
+                  onChange={(event) => setProviderForm({ ...providerForm, model: event.target.value })}
+                />
+              </label>
+
+              <button className="save-provider" type="submit" disabled={isSavingProvider}>
+                {isSavingProvider ? <Settings2 size={17} /> : <KeyRound size={17} />}
+                <span>{isSavingProvider ? "保存中" : "保存配置"}</span>
+              </button>
+            </form>
+
+            {providers.length > 0 && (
+              <div className="provider-list">
+                <div className="sidebar-label">已有配置</div>
+                {providers.map((provider) => (
+                  <button
+                    className={provider.id === selectedProviderId ? "provider-item active" : "provider-item"}
+                    key={provider.id}
+                    type="button"
+                    onClick={() => setSelectedProviderId(provider.id)}
+                  >
+                    <div>
+                      <strong>{provider.name}</strong>
+                      <span>{provider.model}</span>
+                    </div>
+                    {provider.id === selectedProviderId && <Check size={18} />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
-      </aside>
+      )}
     </main>
   );
 }

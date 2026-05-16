@@ -80,7 +80,7 @@ export async function* streamOpenAiCompatible(provider: Provider, messages: Mess
 export async function* streamDemoResponse(userText: string): AsyncGenerator<ChatChunk> {
   const text = [
     "我已经收到这条消息。现在还没有配置真实模型 Provider，所以这是本地演示回复。\n\n",
-    "等你在右侧填入 baseURL、API Key 和 model 后，我会通过本地服务端代理请求模型，并把会话保存进 SQLite。",
+    "等你在左侧的模型设置里填入 baseURL、API Key 和 model 后，我会通过本地服务端代理请求模型，并把会话保存进 SQLite。",
     userText ? `\n\n你刚才说的是：${userText}` : ""
   ].join("");
 

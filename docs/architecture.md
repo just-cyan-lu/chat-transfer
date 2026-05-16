@@ -28,4 +28,4 @@ data/
 1. 可配置 OpenAI-compatible provider。
 2. 本地 SQLite 会话存储。
 3. ChatGPT 风格流式聊天。
-4. 简洁三栏聊天界面。
+4. 简洁两栏聊天界面。
