@@ -198,6 +198,17 @@ export function createConversation(title = "新的对话"): Conversation {
   return { id, title, createdAt: timestamp, updatedAt: timestamp };
 }
 
+export function renameConversation(id: string, title: string): Conversation | null {
+  const timestamp = nowIso();
+  db.prepare("UPDATE conversations SET title = ?, updated_at = ? WHERE id = ?").run(title, timestamp, id);
+  const row = db.prepare("SELECT * FROM conversations WHERE id = ?").get(id) as ConversationRow | undefined;
+  return row ? conversationFromRow(row) : null;
+}
+
+export function deleteConversation(id: string) {
+  db.prepare("DELETE FROM conversations WHERE id = ?").run(id);
+}
+
 export function touchConversation(id: string, title?: string) {
   const timestamp = nowIso();
   if (title) {
@@ -240,6 +251,10 @@ export function addMessage(input: {
 
 export function updateMessage(id: string, content: string, status: Message["status"]) {
   db.prepare("UPDATE messages SET content = ?, status = ? WHERE id = ?").run(content, status, id);
+}
+
+export function deleteMessage(id: string) {
+  db.prepare("DELETE FROM messages WHERE id = ?").run(id);
 }
 
 export function getConversationTitleSeed(conversationId: string): string | null {

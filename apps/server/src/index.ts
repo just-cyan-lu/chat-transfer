@@ -4,12 +4,15 @@ import { z } from "zod";
 import {
   addMessage,
   createConversation,
+  deleteConversation,
+  deleteMessage,
   getConversationTitleSeed,
   getProvider,
   listConversations,
   listMessages,
   listProviders,
   migrate,
+  renameConversation,
   storagePaths,
   touchConversation,
   updateMessage,
@@ -58,9 +61,32 @@ app.get("/api/conversations", async () => listConversations());
 
 app.post("/api/conversations", async () => createConversation());
 
+app.patch("/api/conversations/:id", async (request, reply) => {
+  const params = z.object({ id: z.string() }).parse(request.params);
+  const body = z.object({ title: z.string().trim().min(1).max(80) }).parse(request.body);
+  const conversation = renameConversation(params.id, body.title);
+  if (!conversation) {
+    reply.code(404);
+    return { error: "Conversation not found" };
+  }
+  return conversation;
+});
+
+app.delete("/api/conversations/:id", async (request) => {
+  const params = z.object({ id: z.string() }).parse(request.params);
+  deleteConversation(params.id);
+  return { ok: true };
+});
+
 app.get("/api/conversations/:id/messages", async (request) => {
   const params = z.object({ id: z.string() }).parse(request.params);
   return listMessages(params.id);
+});
+
+app.delete("/api/messages/:id", async (request) => {
+  const params = z.object({ id: z.string() }).parse(request.params);
+  deleteMessage(params.id);
+  return { ok: true };
 });
 
 app.post("/api/chat/stream", async (request, reply) => {

@@ -7,9 +7,11 @@ import {
   MessageSquarePlus,
   PanelLeftClose,
   PanelLeftOpen,
+  Pencil,
   Send,
   Settings2,
   Sparkles,
+  Trash2,
   UserRound,
   X
 } from "lucide-react";
@@ -32,12 +34,14 @@ const emptyProviderForm: ProviderForm = {
 };
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers: Record<string, string> = {};
+  if (init?.body) {
+    headers["Content-Type"] = "application/json";
+  }
+
   const response = await fetch(path, {
     ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...init?.headers
-    }
+    headers
   });
   if (!response.ok) {
     throw new Error(await response.text());
@@ -63,6 +67,8 @@ export default function App() {
   const [isSavingProvider, setIsSavingProvider] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [editingConversationId, setEditingConversationId] = useState<string>("");
+  const [editingConversationTitle, setEditingConversationTitle] = useState("");
   const [statusText, setStatusText] = useState("本地服务连接中");
 
   const selectedProvider = useMemo(
@@ -110,19 +116,76 @@ export default function App() {
   }, []);
 
   async function refreshConversations() {
-    setConversations(await api<Conversation[]>("/api/conversations"));
+    const nextConversations = await api<Conversation[]>("/api/conversations");
+    setConversations(nextConversations);
+    return nextConversations;
   }
 
   async function createNewConversation() {
+    cancelRenamingConversation();
     const created = await api<Conversation>("/api/conversations", { method: "POST" });
-    setConversations((current) => [created, ...current]);
+    const nextConversations = await refreshConversations();
+    if (!nextConversations.some((conversation) => conversation.id === created.id)) {
+      setConversations((current) => [created, ...current]);
+    }
     setActiveConversationId(created.id);
     setMessages([]);
   }
 
   async function openConversation(conversationId: string) {
+    if (editingConversationId) return;
     setActiveConversationId(conversationId);
     setMessages(await api<Message[]>(`/api/conversations/${conversationId}/messages`));
+  }
+
+  function startRenamingConversation(conversation: Conversation) {
+    setEditingConversationId(conversation.id);
+    setEditingConversationTitle(conversation.title);
+  }
+
+  function cancelRenamingConversation() {
+    setEditingConversationId("");
+    setEditingConversationTitle("");
+  }
+
+  async function saveConversationTitle(conversationId: string) {
+    const title = editingConversationTitle.trim();
+    if (!title) {
+      cancelRenamingConversation();
+      return;
+    }
+
+    const updated = await api<Conversation>(`/api/conversations/${conversationId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ title })
+    });
+    setConversations((current) =>
+      current.map((conversation) => (conversation.id === conversationId ? updated : conversation))
+    );
+    cancelRenamingConversation();
+  }
+
+  async function deleteConversationItem(conversationId: string) {
+    if (editingConversationId === conversationId) {
+      cancelRenamingConversation();
+    }
+    await api<{ ok: boolean }>(`/api/conversations/${conversationId}`, { method: "DELETE" });
+    const remaining = conversations.filter((conversation) => conversation.id !== conversationId);
+    setConversations(remaining);
+
+    if (conversationId !== activeConversationId) return;
+
+    const nextConversation = remaining[0] ?? (await api<Conversation>("/api/conversations", { method: "POST" }));
+    if (remaining.length === 0) {
+      setConversations([nextConversation]);
+    }
+    setActiveConversationId(nextConversation.id);
+    setMessages(await api<Message[]>(`/api/conversations/${nextConversation.id}/messages`));
+  }
+
+  async function deleteMessageItem(messageId: string) {
+    await api<{ ok: boolean }>(`/api/messages/${messageId}`, { method: "DELETE" });
+    setMessages((current) => current.filter((message) => message.id !== messageId));
   }
 
   async function saveProvider(event: FormEvent<HTMLFormElement>) {
@@ -262,7 +325,20 @@ export default function App() {
           </button>
         </header>
 
-        <button className="new-chat" type="button" onClick={createNewConversation}>
+        <button
+          className="new-chat"
+          type="button"
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              void createNewConversation();
+            }
+          }}
+          onPointerDown={(event) => {
+            event.preventDefault();
+            void createNewConversation();
+          }}
+        >
           <MessageSquarePlus size={16} />
           <span>新建对话</span>
         </button>
@@ -270,17 +346,82 @@ export default function App() {
         <div className="sidebar-label">对话历史</div>
         <nav className="conversation-list" aria-label="会话列表">
           {conversations.map((conversation) => (
-            <button
+            <div
               className={conversation.id === activeConversationId ? "conversation active" : "conversation"}
               key={conversation.id}
-              type="button"
               title={conversation.title}
-              onClick={() => void openConversation(conversation.id)}
             >
-              <MessageSquare size={16} />
-              <span>{conversation.title}</span>
-              <small>{new Date(conversation.updatedAt).toLocaleDateString()}</small>
-            </button>
+              {editingConversationId === conversation.id ? (
+                <div className="conversation-main editing">
+                  <MessageSquare size={16} />
+                  <input
+                    aria-label="修改对话名称"
+                    autoFocus
+                    className="conversation-title-input"
+                    value={editingConversationTitle}
+                    onChange={(event) => setEditingConversationTitle(event.target.value)}
+                    onClick={(event) => event.stopPropagation()}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        void saveConversationTitle(conversation.id);
+                      }
+                      if (event.key === "Escape") {
+                        cancelRenamingConversation();
+                      }
+                    }}
+                  />
+                  <small>{new Date(conversation.updatedAt).toLocaleDateString()}</small>
+                </div>
+              ) : (
+                <button className="conversation-main" type="button" onClick={() => void openConversation(conversation.id)}>
+                  <MessageSquare size={16} />
+                  <span>{conversation.title}</span>
+                  <small>{new Date(conversation.updatedAt).toLocaleDateString()}</small>
+                </button>
+              )}
+              <div className="conversation-actions">
+                {editingConversationId === conversation.id ? (
+                  <>
+                    <button
+                      aria-label="保存对话名称"
+                      className="mini-icon-button"
+                      type="button"
+                      onClick={() => void saveConversationTitle(conversation.id)}
+                    >
+                      <Check size={14} />
+                    </button>
+                    <button
+                      aria-label="取消修改"
+                      className="mini-icon-button"
+                      type="button"
+                      onClick={cancelRenamingConversation}
+                    >
+                      <X size={14} />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      aria-label="修改对话名称"
+                      className="mini-icon-button"
+                      type="button"
+                      onClick={() => startRenamingConversation(conversation)}
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      aria-label="删除对话"
+                      className="mini-icon-button danger"
+                      type="button"
+                      onClick={() => void deleteConversationItem(conversation.id)}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
           ))}
         </nav>
 
@@ -318,6 +459,16 @@ export default function App() {
                       {message.status === "error" && <span>出错</span>}
                     </div>
                     <p>{message.content}</p>
+                  </div>
+                  <div className="message-actions">
+                    <button
+                      aria-label="删除消息"
+                      className="mini-icon-button danger"
+                      type="button"
+                      onClick={() => void deleteMessageItem(message.id)}
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   </div>
                 </article>
               ))
